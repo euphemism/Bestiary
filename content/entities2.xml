@@ -1,0 +1,11 @@
+<entities anm2root="gfx/" version="5">
+	<entity anm2path="pit_bat.anm2" reroll="true" baseHP="10" boss="0" champion="1" collisionDamage="1" collisionMass="5" collisionRadius="10" friction="1" id="976" variant="0" name="Pit Bat" numGridCollisionPoints="12" shadowSize="16" stageHP="0">
+        <gibs amount="6" blood="1" bone="1" eye="1" gut="1" large="0" />
+    </entity>
+	<entity anm2path="babymomlegs_display.anm2" reroll="true" baseHP="16" boss="0" champion="1" collisionDamage="0" collisionMass="0" collisionRadius="0" friction="0" id="1000" variant="1244" name="Baby Mom Legs Display" numGridCollisionPoints="12" shadowSize="14" stageHP="4">
+        <gibs amount="12" blood="1" bone="1" eye="0" gut="1" large="0" />
+    </entity>
+	<entity anm2path="chastity_display.anm2" reroll="true" baseHP="100" boss="0" champion="1" collisionDamage="0" collisionMass="0" collisionRadius="0" friction="0" id="1000" variant="1245" name="Chastity Display" numGridCollisionPoints="12" shadowSize="16" stageHP="0">
+        <gibs amount="6" blood="1" bone="1" eye="1" gut="1" large="0" />
+    </entity>
+</entities>
