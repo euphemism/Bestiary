@@ -28,7 +28,8 @@ Now before coding just do :
 gulp watch
 ```
 
-Now when you need to put code that will be accessible from anywhere put it in globals.lua, otherwise for any new enemy or collectible, create a lua file in the respective folder under src/
+Now when you need to put code that will be accessible from anywhere put it in globals.lua. 
+For any new enemy or collectible, create a lua file in the respective folder under src/ , __Avoid top level local variables in those files as they may be overriden by other files (other than the mod object: see pitbat.lua for example) __ 
 
 And that's it, happy coding!
 

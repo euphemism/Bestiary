@@ -1,6 +1,5 @@
 local pitBatMod = RegisterMod("Bestiary - Pit Bat", 1)
 
-
 function pitBatMod:newGame(fromSave)
     if not fromSave then
         rng:SetSeed(game:GetSeeds():GetStartSeed(), 0)

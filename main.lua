@@ -42,7 +42,6 @@ TestCollectible:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, TestCollectible.ne
 TestCollectible:AddCallback(ModCallbacks.MC_POST_UPDATE, TestCollectible.onUpdate);
 local pitBatMod = RegisterMod("Bestiary - Pit Bat", 1)
 
-
 function pitBatMod:newGame(fromSave)
     if not fromSave then
         rng:SetSeed(game:GetSeeds():GetStartSeed(), 0)
