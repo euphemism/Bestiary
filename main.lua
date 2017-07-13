@@ -14,32 +14,69 @@ end
 local Entities = {
     PIT_BAT = getEntity("Pit Bat")
 }
+local HushatarCollectible = RegisterMod("Bestiary - Hushatar", 1);
+Isaac.DebugString("Bestiary - Hushatar loading...");
 
-local TestCollectible = RegisterMod("Bestiary - Test Collectible", 1);
-Isaac.DebugString("Should be called anyway");
---Isaac.DebugString("Test mod loading..." .. amIDefined);
+HushatarCollectible.COLLECTIBLE_HUSHATAR = Isaac.GetItemIdByName("Hush Avatar");
+HushatarCollectible.ENTITY_HUSHATAR = Isaac.GetEntityTypeByName("Hush Avatar");
+HushatarCollectible.VARIANT_HUSHATAR = Isaac.GetEntityVariantByName("Hush Avatar");
+
+--Hushatar item init
+HushatarCollectible.shootDamage = 3.65;
+HushatarCollectible.shootInterval = 110;
+HushatarCollectible.shootDelay = 110;
+
+function HushatarCollectible:playSound(position, sound, pitch, volume)
+  --play sound hack
+  local sound_entity = Isaac.Spawn(EntityType.ENTITY_FLY, 0, 0, position, Vector(0,0), nil):ToNPC();
+  sound_entity:PlaySound(sound , volume, 0, false, pitch);
+  sound_entity:Remove();
+end
 
 -- NEW RUN CALLBACK
-function TestCollectible:newRun()
+function HushatarCollectible:PostPlayerInit()  
   local player = Isaac.GetPlayer(0);
   local currentRoom = Game():GetRoom();
-  TestCollectible.lastRoom = currentRoom:GetDecorationSeed();
+  HushatarCollectible.lastRoom = currentRoom:GetDecorationSeed();
 end
 
 -- POST UPDATE CALLBACK
-function TestCollectible:onUpdate()
-  local currentRoom = Game():GetRoom();
-  
+function HushatarCollectible:onUpdate()  
   -- Begining of run
   if Game():GetFrameCount() == 1 then
       -- Debug spawn
-	  Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, CollectibleType.COLLECTIBLE_BLOOD_MARTYR, Vector(280, 250), Vector(0,0), nil);
-      
-  end
+	  Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, HushatarCollectible.COLLECTIBLE_HUSHATAR, Vector(200, 150), Vector(0,0), nil);      
+  end  
+  
+  for playerNum = 1, Game():GetNumPlayers() do
+    local player = Game():GetPlayer(playerNum);    
+  end    
 end
 
-TestCollectible:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, TestCollectible.newRun);
-TestCollectible:AddCallback(ModCallbacks.MC_POST_UPDATE, TestCollectible.onUpdate);
+-- FAMILIAR INIT CALLBACK
+function HushatarCollectible:onFamiliarInit(familiar)
+  familiar.IsFollower = true;    
+end
+
+-- FAMILIAR UPDATE CALLBACK
+function HushatarCollectible:onFamiliarUpdate(familiar)
+  familiar:FollowParent();  
+  local sprite = familiar:GetSprite();
+end
+
+-- ON CACHE
+function HushatarCollectible:onCache(player, cacheFlag)  
+  if cacheFlag == CacheFlag.CACHE_FAMILIARS then
+    player:CheckFamiliar(HushatarCollectible.VARIANT_HUSHATAR, player:GetCollectibleNum(HushatarCollectible.COLLECTIBLE_HUSHATAR), RNG());
+  end    
+end
+
+HushatarCollectible:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, HushatarCollectible.PostPlayerInit);
+HushatarCollectible:AddCallback(ModCallbacks.MC_POST_UPDATE, HushatarCollectible.onUpdate);
+HushatarCollectible:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, HushatarCollectible.onCache);
+
+HushatarCollectible:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, HushatarCollectible.onFamiliarUpdate, HushatarCollectible.VARIANT_HUSHATAR);
+HushatarCollectible:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, HushatarCollectible.onFamiliarInit, HushatarCollectible.VARIANT_HUSHATAR);
 local pitBatMod = RegisterMod("Bestiary - Pit Bat", 1)
 
 function pitBatMod:newGame(fromSave)
