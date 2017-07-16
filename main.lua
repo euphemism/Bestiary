@@ -1,7 +1,22 @@
+local bestiaryMod = RegisterMod("Bestiary - Globals", 1);
 local sfx = SFXManager()
 local music = MusicManager()
 local game = Game()
 local rng = RNG()
+
+bestiaryMod.enemyCount = 0;
+
+-- UPDATE CALLBACK
+function bestiaryMod:onUpdate()
+  bestiaryMod.enemyCount = 0;
+  for i, entity in pairs(Isaac.GetRoomEntities()) do
+    --count enemies
+    if entity:IsVulnerableEnemy() then
+      bestiaryMod.enemyCount = bestiaryMod.enemyCount + 1;
+    end
+  end     
+end
+
 
 local function getEntity(name, subt)
     if subt == nil then
@@ -11,9 +26,18 @@ local function getEntity(name, subt)
     return { id = Isaac.GetEntityTypeByName(name), variant = Isaac.GetEntityVariantByName(name), subtype = subt }
 end
 
+function playSound(position, sound, pitch, volume)
+  --play sound hack
+  local sound_entity = Isaac.Spawn(EntityType.ENTITY_FLY, 0, 0, position, Vector(0,0), nil):ToNPC();
+  sound_entity:PlaySound(sound , volume, 0, false, pitch);
+  sound_entity:Remove();
+end
+
 local Entities = {
     PIT_BAT = getEntity("Pit Bat")
 }
+
+bestiaryMod:AddCallback(ModCallbacks.MC_POST_UPDATE, bestiaryMod.onUpdate);
 local HushatarCollectible = RegisterMod("Bestiary - Hushatar", 1);
 Isaac.DebugString("Bestiary - Hushatar loading...");
 
@@ -23,15 +47,11 @@ HushatarCollectible.VARIANT_HUSHATAR = Isaac.GetEntityVariantByName("Hush Avatar
 
 --Hushatar item init
 HushatarCollectible.shootDamage = 3.65;
-HushatarCollectible.shootInterval = 110;
-HushatarCollectible.shootDelay = 110;
-
-function HushatarCollectible:playSound(position, sound, pitch, volume)
-  --play sound hack
-  local sound_entity = Isaac.Spawn(EntityType.ENTITY_FLY, 0, 0, position, Vector(0,0), nil):ToNPC();
-  sound_entity:PlaySound(sound , volume, 0, false, pitch);
-  sound_entity:Remove();
-end
+HushatarCollectible.shootInterval = 150;
+HushatarCollectible.shootDelay = 150;
+HushatarCollectible.shootSpeed = 8;
+HushatarCollectible.familiarVelocity = 4.5;
+HushatarCollectible.debugFrame = true;
 
 -- NEW RUN CALLBACK
 function HushatarCollectible:PostPlayerInit()  
@@ -55,13 +75,60 @@ end
 
 -- FAMILIAR INIT CALLBACK
 function HushatarCollectible:onFamiliarInit(familiar)
-  familiar.IsFollower = true;    
+  --familiar.IsFollower = true;
+  HushatarCollectible.debugFrame = true;
 end
 
 -- FAMILIAR UPDATE CALLBACK
 function HushatarCollectible:onFamiliarUpdate(familiar)
-  familiar:FollowParent();  
+  --familiar:FollowParent();  
   local sprite = familiar:GetSprite();
+
+   --Bounce off walls
+  familiar.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_WALLS;
+  if HushatarCollectible.debugFrame then --makes sure familiar has initial velocity
+    familiar.Velocity = Vector(5, -5);
+    HushatarCollectible.debugFrame = false;
+  else 
+    familiar.Velocity = familiar.Velocity:Resized(HushatarCollectible.familiarVelocity);
+  end
+
+  if HushatarCollectible.shootDelay < HushatarCollectible.shootInterval then
+    HushatarCollectible.shootDelay = HushatarCollectible.shootDelay + 1;
+    --finish anim
+    if sprite:IsFinished("Hit") then
+      sprite:Play("Idle", true);      
+    end
+  else
+    -- fire projectiles
+    if bestiaryMod.enemyCount > 0 then
+      sprite:Play("Hit", true);
+      playSound(familiar.Position, SoundEffect.SOUND_SATAN_BLAST, 2, 1);
+      HushatarCollectible.shootDelay = 0;
+      HushatarCollectible:FireTear(familiar, Vector(0, -1));
+      HushatarCollectible:FireTear(familiar, Vector(0, 1));
+      HushatarCollectible:FireTear(familiar, Vector(1, 0));
+      HushatarCollectible:FireTear(familiar, Vector(-1, 0));
+    end
+  end
+end
+
+function HushatarCollectible:FireTear(familiar, vector)
+  local tear = nil;
+  local player = Game():GetPlayer(0);
+  local oldPlyerDamage = player.Damage;
+  player.Damage = HushatarCollectible.shootDamage;
+  tear = player:FireTear(familiar.Position, vector * HushatarCollectible.shootSpeed, false, false, false);  
+  tear:ChangeVariant(TearVariant.METALLIC);
+  player.Damage = oldPlyerDamage;
+  --apply tear effects
+  if tear ~= nil then
+    tear.TearFlags = 68719476737;--continuum + spectral
+    tear.HomingFriction = 1;
+    --tear.Color = Color(0,0,0,0.9,128,32,128);
+    tear.FallingSpeed = -12;
+    tear.Scale = 1;
+  end
 end
 
 -- ON CACHE
