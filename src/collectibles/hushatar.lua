@@ -29,11 +29,7 @@ function HushatarCollectible:onUpdate()
   if Game():GetFrameCount() == 1 then
       -- Debug spawn
 	  Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, HushatarCollectible.COLLECTIBLE_HUSHATAR, Vector(200, 150), Vector(0,0), nil);      
-  end  
-  
-  for playerNum = 1, Game():GetNumPlayers() do
-    local player = Game():GetPlayer(playerNum);    
-  end    
+  end   
 end
 
 -- FAMILIAR INIT CALLBACK
@@ -66,7 +62,6 @@ function HushatarCollectible:onFamiliarUpdate(familiar)
     --check if enemy is in range
     local hasTarget = false;
     for j, entity in pairs(Isaac.GetRoomEntities()) do
-      --enemy in range
       if entity:IsVulnerableEnemy() and
         entity.Position:Distance(familiar.Position) < HushatarCollectible.attackRange and
         (math.floor(entity.Position.X / HushatarCollectible.attackPrecision) == math.floor(familiar.Position.X / HushatarCollectible.attackPrecision) or

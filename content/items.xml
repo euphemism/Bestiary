@@ -1,3 +1,4 @@
 <items gfxroot="gfx/items/" version="1">
 	<passive devilprice="1" cache="familiars" description="??? friend" gfx="Collectibles_Hushatar.png" name="Hush Avatar" id="13072017451" />
+	<passive devilprice="1" cache="familiars" description="Vodoo friend" gfx="Collectibles_Redpuppet.png" name="Red Puppet" id="13072017452" />
 </items>

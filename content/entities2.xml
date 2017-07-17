@@ -11,4 +11,7 @@
     <entity anm2path="hushatar.anm2" baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" collisionRadius="13" friction="1" id="3" name="Hush Avatar" numGridCollisionPoints="12" shadowSize="11" stageHP="0" variant="14453" subtype="0">
         <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
     </entity>
+    <entity anm2path="redpuppet.anm2" baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" collisionRadius="13" friction="1" id="3" name="Red Puppet" numGridCollisionPoints="12" shadowSize="11" stageHP="0" variant="14454" subtype="0">
+        <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
+    </entity>
 </entities>
