@@ -6,11 +6,14 @@ HushatarCollectible.ENTITY_HUSHATAR = Isaac.GetEntityTypeByName("Hush Avatar");
 HushatarCollectible.VARIANT_HUSHATAR = Isaac.GetEntityVariantByName("Hush Avatar");
 
 --Hushatar item init
-HushatarCollectible.shootDamage = 3.65;
-HushatarCollectible.shootInterval = 150;
-HushatarCollectible.shootDelay = 150;
-HushatarCollectible.shootSpeed = 8;
-HushatarCollectible.familiarVelocity = 4.5;
+HushatarCollectible.tearDamage = 4.5;
+HushatarCollectible.tearInterval = 120;
+HushatarCollectible.tearDelay = 120;
+HushatarCollectible.tearSpeed = 12;
+HushatarCollectible.tearFallingSpeed = -8;
+HushatarCollectible.attackRange = 220;
+HushatarCollectible.familiarVelocity = 5.5;
+HushatarCollectible.attackPrecision = 5;
 HushatarCollectible.debugFrame = true;
 
 -- NEW RUN CALLBACK
@@ -53,18 +56,30 @@ function HushatarCollectible:onFamiliarUpdate(familiar)
     familiar.Velocity = familiar.Velocity:Resized(HushatarCollectible.familiarVelocity);
   end
 
-  if HushatarCollectible.shootDelay < HushatarCollectible.shootInterval then
-    HushatarCollectible.shootDelay = HushatarCollectible.shootDelay + 1;
+  if HushatarCollectible.tearDelay < HushatarCollectible.tearInterval then
+    HushatarCollectible.tearDelay = HushatarCollectible.tearDelay + 1;
     --finish anim
     if sprite:IsFinished("Hit") then
       sprite:Play("Idle", true);      
     end
   else
-    -- fire projectiles
-    if bestiaryMod.enemyCount > 0 then
+    --check if enemy is in range
+    local hasTarget = false;
+    for j, entity in pairs(Isaac.GetRoomEntities()) do
+      --enemy in range
+      if entity:IsVulnerableEnemy() and
+        entity.Position:Distance(familiar.Position) < HushatarCollectible.attackRange and
+        (math.floor(entity.Position.X / HushatarCollectible.attackPrecision) == math.floor(familiar.Position.X / HushatarCollectible.attackPrecision) or
+        math.floor(entity.Position.Y / HushatarCollectible.attackPrecision) == math.floor(familiar.Position.Y / HushatarCollectible.attackPrecision)) then     
+
+        hasTarget = true;
+        break;
+      end
+    end
+    if hasTarget then
       sprite:Play("Hit", true);
-      playSound(familiar.Position, SoundEffect.SOUND_SATAN_BLAST, 2, 1);
-      HushatarCollectible.shootDelay = 0;
+      playSound(familiar.Position, SoundEffect.SOUND_SATAN_BLAST, 2, 0.6);
+      HushatarCollectible.tearDelay = 0;
       HushatarCollectible:FireTear(familiar, Vector(0, -1));
       HushatarCollectible:FireTear(familiar, Vector(0, 1));
       HushatarCollectible:FireTear(familiar, Vector(1, 0));
@@ -77,16 +92,15 @@ function HushatarCollectible:FireTear(familiar, vector)
   local tear = nil;
   local player = Game():GetPlayer(0);
   local oldPlyerDamage = player.Damage;
-  player.Damage = HushatarCollectible.shootDamage;
-  tear = player:FireTear(familiar.Position, vector * HushatarCollectible.shootSpeed, false, false, false);  
+  player.Damage = HushatarCollectible.tearDamage;
+  tear = player:FireTear(familiar.Position, vector * HushatarCollectible.tearSpeed, false, false, false);  
   tear:ChangeVariant(TearVariant.METALLIC);
   player.Damage = oldPlyerDamage;
   --apply tear effects
   if tear ~= nil then
     tear.TearFlags = 68719476737;--continuum + spectral
-    tear.HomingFriction = 1;
     --tear.Color = Color(0,0,0,0.9,128,32,128);
-    tear.FallingSpeed = -12;
+    tear.FallingSpeed = HushatarCollectible.tearFallingSpeed;
     tear.Scale = 1;
   end
 end
