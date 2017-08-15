@@ -6,14 +6,14 @@ HushatarCollectible.ENTITY_HUSHATAR = Isaac.GetEntityTypeByName("Hush Avatar");
 HushatarCollectible.VARIANT_HUSHATAR = Isaac.GetEntityVariantByName("Hush Avatar");
 
 --Hushatar item init
-HushatarCollectible.tearDamage = 4.5;
-HushatarCollectible.tearInterval = 120;
+HushatarCollectible.TEAR_DMG = 4.5;
+HushatarCollectible.TEAR_INTERVAL = 120;
+HushatarCollectible.TEAR_SPEED = 12;
+HushatarCollectible.TEAR_FALLING_SPD = -8;
+HushatarCollectible.FAMILIAR_RANGE = 220;
+HushatarCollectible.FAMILIAR_VELOCITY = 5.5;
+HushatarCollectible.FAMILIAR_PRECISION = 5;
 HushatarCollectible.tearDelay = 120;
-HushatarCollectible.tearSpeed = 12;
-HushatarCollectible.tearFallingSpeed = -8;
-HushatarCollectible.attackRange = 220;
-HushatarCollectible.familiarVelocity = 5.5;
-HushatarCollectible.attackPrecision = 5;
 HushatarCollectible.debugFrame = true;
 
 -- NEW RUN CALLBACK
@@ -49,10 +49,10 @@ function HushatarCollectible:onFamiliarUpdate(familiar)
     familiar.Velocity = Vector(5, -5);
     HushatarCollectible.debugFrame = false;
   else 
-    familiar.Velocity = familiar.Velocity:Resized(HushatarCollectible.familiarVelocity);
+    familiar.Velocity = familiar.Velocity:Resized(HushatarCollectible.FAMILIAR_VELOCITY);
   end
 
-  if HushatarCollectible.tearDelay < HushatarCollectible.tearInterval then
+  if HushatarCollectible.tearDelay < HushatarCollectible.TEAR_INTERVAL then
     HushatarCollectible.tearDelay = HushatarCollectible.tearDelay + 1;
     --finish anim
     if sprite:IsFinished("Hit") then
@@ -63,9 +63,9 @@ function HushatarCollectible:onFamiliarUpdate(familiar)
     local hasTarget = false;
     for j, entity in pairs(Isaac.GetRoomEntities()) do
       if entity:IsVulnerableEnemy() and
-        entity.Position:Distance(familiar.Position) < HushatarCollectible.attackRange and
-        (math.floor(entity.Position.X / HushatarCollectible.attackPrecision) == math.floor(familiar.Position.X / HushatarCollectible.attackPrecision) or
-        math.floor(entity.Position.Y / HushatarCollectible.attackPrecision) == math.floor(familiar.Position.Y / HushatarCollectible.attackPrecision)) then     
+        entity.Position:Distance(familiar.Position) < HushatarCollectible.FAMILIAR_RANGE and
+        (math.floor(entity.Position.X / HushatarCollectible.FAMILIAR_PRECISION) == math.floor(familiar.Position.X / HushatarCollectible.FAMILIAR_PRECISION) or
+        math.floor(entity.Position.Y / HushatarCollectible.FAMILIAR_PRECISION) == math.floor(familiar.Position.Y / HushatarCollectible.FAMILIAR_PRECISION)) then     
 
         hasTarget = true;
         break;
@@ -87,15 +87,15 @@ function HushatarCollectible:FireTear(familiar, vector)
   local tear = nil;
   local player = Game():GetPlayer(0);
   local oldPlyerDamage = player.Damage;
-  player.Damage = HushatarCollectible.tearDamage;
-  tear = player:FireTear(familiar.Position, vector * HushatarCollectible.tearSpeed, false, false, false);  
+  player.Damage = HushatarCollectible.TEAR_DMG;
+  tear = player:FireTear(familiar.Position, vector * HushatarCollectible.TEAR_SPEED, false, false, false);  
   tear:ChangeVariant(TearVariant.METALLIC);
   player.Damage = oldPlyerDamage;
   --apply tear effects
   if tear ~= nil then
     tear.TearFlags = 68719476737;--continuum + spectral
     --tear.Color = Color(0,0,0,0.9,128,32,128);
-    tear.FallingSpeed = HushatarCollectible.tearFallingSpeed;
+    tear.FallingSpeed = HushatarCollectible.TEAR_FALLING_SPD;
     tear.Scale = 1;
   end
 end

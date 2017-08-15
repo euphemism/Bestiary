@@ -46,14 +46,14 @@ HushatarCollectible.ENTITY_HUSHATAR = Isaac.GetEntityTypeByName("Hush Avatar");
 HushatarCollectible.VARIANT_HUSHATAR = Isaac.GetEntityVariantByName("Hush Avatar");
 
 --Hushatar item init
-HushatarCollectible.tearDamage = 4.5;
-HushatarCollectible.tearInterval = 120;
+HushatarCollectible.TEAR_DMG = 4.5;
+HushatarCollectible.TEAR_INTERVAL = 120;
+HushatarCollectible.TEAR_SPEED = 12;
+HushatarCollectible.TEAR_FALLING_SPD = -8;
+HushatarCollectible.FAMILIAR_RANGE = 220;
+HushatarCollectible.FAMILIAR_VELOCITY = 5.5;
+HushatarCollectible.FAMILIAR_PRECISION = 5;
 HushatarCollectible.tearDelay = 120;
-HushatarCollectible.tearSpeed = 12;
-HushatarCollectible.tearFallingSpeed = -8;
-HushatarCollectible.attackRange = 220;
-HushatarCollectible.familiarVelocity = 5.5;
-HushatarCollectible.attackPrecision = 5;
 HushatarCollectible.debugFrame = true;
 
 -- NEW RUN CALLBACK
@@ -89,10 +89,10 @@ function HushatarCollectible:onFamiliarUpdate(familiar)
     familiar.Velocity = Vector(5, -5);
     HushatarCollectible.debugFrame = false;
   else 
-    familiar.Velocity = familiar.Velocity:Resized(HushatarCollectible.familiarVelocity);
+    familiar.Velocity = familiar.Velocity:Resized(HushatarCollectible.FAMILIAR_VELOCITY);
   end
 
-  if HushatarCollectible.tearDelay < HushatarCollectible.tearInterval then
+  if HushatarCollectible.tearDelay < HushatarCollectible.TEAR_INTERVAL then
     HushatarCollectible.tearDelay = HushatarCollectible.tearDelay + 1;
     --finish anim
     if sprite:IsFinished("Hit") then
@@ -103,9 +103,9 @@ function HushatarCollectible:onFamiliarUpdate(familiar)
     local hasTarget = false;
     for j, entity in pairs(Isaac.GetRoomEntities()) do
       if entity:IsVulnerableEnemy() and
-        entity.Position:Distance(familiar.Position) < HushatarCollectible.attackRange and
-        (math.floor(entity.Position.X / HushatarCollectible.attackPrecision) == math.floor(familiar.Position.X / HushatarCollectible.attackPrecision) or
-        math.floor(entity.Position.Y / HushatarCollectible.attackPrecision) == math.floor(familiar.Position.Y / HushatarCollectible.attackPrecision)) then     
+        entity.Position:Distance(familiar.Position) < HushatarCollectible.FAMILIAR_RANGE and
+        (math.floor(entity.Position.X / HushatarCollectible.FAMILIAR_PRECISION) == math.floor(familiar.Position.X / HushatarCollectible.FAMILIAR_PRECISION) or
+        math.floor(entity.Position.Y / HushatarCollectible.FAMILIAR_PRECISION) == math.floor(familiar.Position.Y / HushatarCollectible.FAMILIAR_PRECISION)) then     
 
         hasTarget = true;
         break;
@@ -127,15 +127,15 @@ function HushatarCollectible:FireTear(familiar, vector)
   local tear = nil;
   local player = Game():GetPlayer(0);
   local oldPlyerDamage = player.Damage;
-  player.Damage = HushatarCollectible.tearDamage;
-  tear = player:FireTear(familiar.Position, vector * HushatarCollectible.tearSpeed, false, false, false);  
+  player.Damage = HushatarCollectible.TEAR_DMG;
+  tear = player:FireTear(familiar.Position, vector * HushatarCollectible.TEAR_SPEED, false, false, false);  
   tear:ChangeVariant(TearVariant.METALLIC);
   player.Damage = oldPlyerDamage;
   --apply tear effects
   if tear ~= nil then
     tear.TearFlags = 68719476737;--continuum + spectral
     --tear.Color = Color(0,0,0,0.9,128,32,128);
-    tear.FallingSpeed = HushatarCollectible.tearFallingSpeed;
+    tear.FallingSpeed = HushatarCollectible.TEAR_FALLING_SPD;
     tear.Scale = 1;
   end
 end
@@ -161,14 +161,15 @@ RedPuppetCollectible.ENTITY_REDPUPPET = Isaac.GetEntityTypeByName("Red Puppet");
 RedPuppetCollectible.VARIANT_REDPUPPET = Isaac.GetEntityVariantByName("Red Puppet");
 
 --RedPuppet item init
-RedPuppetCollectible.playerCouldShot = false;
-RedPuppetCollectible.tearDamageFactor = 0.9;
-RedPuppetCollectible.tearInterval = 9;
+RedPuppetCollectible.TEAR_DMG_FACTOR = 0.9;
+RedPuppetCollectible.TEAR_INTERVAL = 9;
+RedPuppetCollectible.TEAR_FALLING_SPD = 0.5;
+RedPuppetCollectible.TEAR_COUNT = 12;
+RedPuppetCollectible.FAMILIAR_VELOCITY = 4;
+RedPuppetCollectible.TEAR_SPEED = 7;
 RedPuppetCollectible.tearDelay = 9;
-RedPuppetCollectible.tearSpeed = 7;
-RedPuppetCollectible.tearFallingSpeed = 0.5;
-RedPuppetCollectible.tearCount = 12;
-RedPuppetCollectible.familiarVelocity = 4;
+RedPuppetCollectible.playerCharge = 0;
+RedPuppetCollectible.playerWasCharging = false;
 RedPuppetCollectible.debugFrame = true;
 
 -- NEW RUN CALLBACK
@@ -204,7 +205,7 @@ function RedPuppetCollectible:onFamiliarUpdate(familiar)
     familiar.Velocity = Vector(-5, -5);
     RedPuppetCollectible.debugFrame = false;
   else 
-    familiar.Velocity = familiar.Velocity:Resized(RedPuppetCollectible.familiarVelocity);
+    familiar.Velocity = familiar.Velocity:Resized(RedPuppetCollectible.FAMILIAR_VELOCITY);
   end
   --finish anim
   if sprite:IsFinished("Hit") then
@@ -212,34 +213,72 @@ function RedPuppetCollectible:onFamiliarUpdate(familiar)
   end
 
   local player = Game():GetPlayer(0);
-  --check if player fired
-  if player.FireDelay == player.MaxFireDelay then
-    if RedPuppetCollectible.tearDelay < RedPuppetCollectible.tearInterval then
-      RedPuppetCollectible.tearDelay = RedPuppetCollectible.tearDelay + 1;
-      
-    else      
-      sprite:Play("Hit", true);
-      playSound(familiar.Position, SoundEffect.SOUND_LITTLE_HORN_COUGH, 1.5, 0.6);
-      RedPuppetCollectible.tearDelay = 0;
+  local chargeItemFired = false;  
 
-      for i = 1, RedPuppetCollectible.tearCount do
-        RedPuppetCollectible:FireTear(familiar, Vector(math.cos(i / RedPuppetCollectible.tearCount * math.pi * 2), math.sin(i / RedPuppetCollectible.tearCount * math.pi * 2)));
-      end     
+  if player:HasCollectible(CollectibleType.COLLECTIBLE_MOMS_KNIFE) or 
+    player:HasCollectible(CollectibleType.COLLECTIBLE_BRIMSTONE) or
+    player:HasCollectible(CollectibleType.COLLECTIBLE_CHOCOLATE_MILK) or
+    player:HasCollectible(CollectibleType.COLLECTIBLE_MONSTROS_LUNG) or
+    player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
+    if player:GetShootingInput().X ~= 0 or player:GetShootingInput().Y ~= 0 then
+      RedPuppetCollectible.playerCharge = RedPuppetCollectible.playerCharge + 1;
+      if RedPuppetCollectible.playerCharge > player.MaxFireDelay * 1.5 then -- prevent spam charging
+        RedPuppetCollectible.playerWasCharging = true;   
+      end   
+    else
+      if RedPuppetCollectible.playerWasCharging then
+        chargeItemFired = true;
+      end
+      RedPuppetCollectible.playerWasCharging = false;
+      RedPuppetCollectible.playerCharge = 0;
     end
-  end
-  
+  end 
+
+  --check if player fired
+  if player.FireDelay == player.MaxFireDelay or chargeItemFired then
+    if RedPuppetCollectible.tearDelay < RedPuppetCollectible.TEAR_INTERVAL then
+      RedPuppetCollectible.tearDelay = RedPuppetCollectible.tearDelay + 1;
+    else      
+      RedPuppetCollectible:TriggerEffect(player, familiar, sprite);
+    end
+  end  
+end
+
+function RedPuppetCollectible:TriggerEffect(player, familiar, sprite) 
+  sprite:Play("Hit", true);
+  playSound(familiar.Position, SoundEffect.SOUND_LITTLE_HORN_COUGH, 1.5, 0.6);
+  RedPuppetCollectible.tearDelay = 0;
+
+  for i = 1, RedPuppetCollectible.TEAR_COUNT do
+    local shootVector = Vector(math.cos(i / RedPuppetCollectible.TEAR_COUNT * math.pi * 2), math.sin(i / RedPuppetCollectible.TEAR_COUNT * math.pi * 2));
+    if player:HasCollectible(CollectibleType.COLLECTIBLE_TECHNOLOGY) then
+      local angle = shootVector:GetAngleDegrees();
+      local laser = EntityLaser.ShootAngle(2, familiar.Position, angle, 8, Vector(0,0), familiar);
+      laser:SetOneHit(true);
+    elseif player:HasCollectible(CollectibleType.COLLECTIBLE_BRIMSTONE) then      
+      local angle = shootVector:GetAngleDegrees();
+      local laser = EntityLaser.ShootAngle(1, familiar.Position, angle, 8, Vector(0,0), familiar);
+    elseif player:HasCollectible(CollectibleType.COLLECTIBLE_DR_FETUS) then
+      player:FireBomb(familiar.Position, shootVector * RedPuppetCollectible.TEAR_SPEED);
+      local laser = EntityLaser.ShootAngle(1, familiar.Position, angle, 8, Vector(0,0), familiar);
+    elseif player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
+      player:FireTechXLaser(familiar.Position, shootVector * RedPuppetCollectible.TEAR_SPEED, 10);
+    else
+      RedPuppetCollectible:FireTear(familiar, shootVector);
+    end        
+  end  
 end
 
 function RedPuppetCollectible:FireTear(familiar, vector)
   local tear = nil;
   local player = Game():GetPlayer(0);
   local oldPlyerDamage = player.Damage;
-  player.Damage = player.Damage * RedPuppetCollectible.tearDamageFactor;
-  tear = player:FireTear(familiar.Position, vector * RedPuppetCollectible.tearSpeed, false, false, false);  
+  player.Damage = player.Damage * RedPuppetCollectible.TEAR_DMG_FACTOR;
+  tear = player:FireTear(familiar.Position, vector * RedPuppetCollectible.TEAR_SPEED, false, false, false);  
   player.Damage = oldPlyerDamage;
   --apply tear effects
   if tear ~= nil then
-    tear.FallingSpeed = RedPuppetCollectible.tearFallingSpeed;
+    tear.FallingSpeed = RedPuppetCollectible.TEAR_FALLING_SPD;
     --tear.Scale = 1;
   end
 end
