@@ -1,6 +1,7 @@
 <ItemPools>   
     <Pool Name="devil">
       <Item Name="Hush Avatar" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+      <Item Name="Red Puppet" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
     <Pool Name="greedDevil">
       <Item Name="Hush Avatar" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
@@ -10,5 +11,12 @@
     </Pool>
     <Pool Name="greedCurse">
       <Item Name="Hush Avatar" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+    <Pool Name="boss">
+      <Item Name="Little Peep" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+    <Pool Name="treasure">
+      <Item Name="Little Peep" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+      <Item Name="Red Puppet" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 </ItemPools>
