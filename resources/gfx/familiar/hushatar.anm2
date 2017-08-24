@@ -2,7 +2,7 @@
 	<Info CreatedBy="robot" CreatedOn="13/07/2017 19:40:56" Version="104" Fps="30"/>
 	<Content>
 		<Spritesheets>
-			<Spritesheet Path="familiar\Hushatar.png" Id="0"/>
+			<Spritesheet Path="Hushatar.png" Id="0"/>
 		</Spritesheets>
 		<Layers>
 			<Layer Name="body" Id="0" SpritesheetId="0"/>
