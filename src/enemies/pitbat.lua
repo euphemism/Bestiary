@@ -47,6 +47,72 @@ end
 
 pitBatMod:AddCallback(ModCallbacks.MC_NPC_UPDATE, pitBatMod.pitBatControl, Entities.PIT_BAT.id)
 
+function pitBatMod:cellToIndex(gridWidth, cellX, cellY)
+	return cellY * gridWidth + cellX
+end
+
+function pitBatMod:getGridEntityAtCell(room, cellX, cellY)
+	return room:getGridEntity(pitBatMod.cellToIndex(room:GetGridWidth(), cellX, cellY))
+end
+
+function pitBatMod:generatePitTable()
+		local room = game:GetLevel():GetCurrentRoom()
+		local gridSize = room:GetGridSize()
+		local roomWidth = room:GetGridWidth()
+		local roomHeight = room:GetGridHeight()
+
+		local pitTable = {}
+		
+		for col = 1, roomWidth do
+			pitTable[col] = {}
+			
+			for row = 1, roomHeight do
+				entity = getGridEntityAtCell(room, col - 1, row - 1)
+
+				pitTable[col][row] = not not entity:ToPit()  -- boolean logic with nil is funny, I think this is an okay way of doing this.
+            end
+		end
+		
+		return pitTable
+end
+
+function pitBatMod:extractPitEdgeCellsHelper(pitTable, visitedTable, cellX, cellY, width, height)
+	indices = {}
+	visitedTable[cellX][cellY] = true
+	
+	
+end
+
+-- Returns an "array" of grid indices containing pit edge cells.
+function pitBatMod:extractPitEdgeCells(pitTable)
+	width = #pitTable
+	height = #pitTable[1]
+
+	visitedTable = {}  -- First need to populate this with false, as we have not visited any cells.
+	indices = {}
+	
+	for i = 1, width do
+		visitedTable[i] = {}
+		
+		for j = 1, height do
+			visitedTable[i][j] = false
+		end
+	end
+	
+	for col = 1, width do
+		for row = 1, height do
+			if not visited[col][row] then
+				newIndices = pitBatMod.extractPitEdgeCellsHelper(pitTable, visitedTable,
+						col, row, width, height)
+						
+				indices = array_concat(indices, newIndices)
+			end
+			
+	return indices
+end
+
+--extractPitEdgeCells({}, 5, 4, cellX, cellY, {})
+
 function pitBatMod:populatePits()
     local room = game:GetLevel():GetCurrentRoom()
     local spawnCount = 0
