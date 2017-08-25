@@ -80,7 +80,7 @@ function pitBatMod:extractPitEdgeCellsHelper(pitTable, visitedTable, cellX, cell
 	indices = {}
 	visitedTable[cellX][cellY] = true
 	
-	
+	leftIndices = pitBatMod.extractPitEdgeCellsHelper(pitTable, visitedTable
 end
 
 -- Returns an "array" of grid indices containing pit edge cells.
