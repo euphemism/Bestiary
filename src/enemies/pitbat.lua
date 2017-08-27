@@ -50,43 +50,43 @@ end
 pitBatMod:AddCallback(ModCallbacks.MC_NPC_UPDATE, pitBatMod.pitBatControl, Entities.PIT_BAT.id)
 
 function pitBatMod:cellToIndex(gridWidth, cellX, cellY)
-	return cellY * gridWidth + cellX
+    return cellY * gridWidth + cellX
 end
 
 function pitBatMod:getGridEntityAtCell(room, cellX, cellY)
-	return room:GetGridEntity(pitBatMod:cellToIndex(room:GetGridWidth(), cellX, cellY))
+    return room:GetGridEntity(pitBatMod:cellToIndex(room:GetGridWidth(), cellX, cellY))
 end
 
 function pitBatMod:generatePitTable()
-		local room = game:GetLevel():GetCurrentRoom()
-		local pitTable = {}
+    local room = game:GetLevel():GetCurrentRoom()
+    local pitTable = {}
 
-		for col = 1, room:GetGridWidth() do
-			pitTable[col] = {}
+    for col = 1, room:GetGridWidth() do
+        pitTable[col] = {}
 
-			for row = 1, room:GetGridHeight() do
-				gridEntity = pitBatMod:getGridEntityAtCell(room, col - 1, row - 1)
+        for row = 1, room:GetGridHeight() do
+            gridEntity = pitBatMod:getGridEntityAtCell(room, col - 1, row - 1)
 
-				if gridEntity then
-					pitTable[col][row] = not not gridEntity:ToPit()  -- boolean logic with nil is funny, I think this is an okay way of doing this.
-				else
-					pitTable[col][row] = false
-				end
+            if gridEntity then
+                pitTable[col][row] = not not gridEntity:ToPit()  -- boolean logic with nil is funny, I think this is an okay way of doing this.
+            else
+                pitTable[col][row] = false
             end
-		end
+        end
+    end
 
-		return pitTable
+    return pitTable
 end
 
 function pitBatMod:extractPitEdgeCellsHelper(pitTable, visitedTable, cellX, cellY, width, height, indices)
-	isPit = pitTable[cellX][cellY]
+    isPit = pitTable[cellX][cellY]
 
-	if visitedTable[cellX][cellY] or not isPit then
-		return isPit and 0 or 1 --  Return 0 if pit, 1 if not.
-	end
+    if visitedTable[cellX][cellY] or not isPit then
+        return isPit and 0 or 1 --  Return 0 if pit, 1 if not.
+    end
 
-	visitedTable[cellX][cellY] = true
-	numberOfNonPitNeighbors = 0
+    visitedTable[cellX][cellY] = true
+    numberOfNonPitNeighbors = 0
 
     function clamp(x, y)
         if not ((1 <= x) and (x <= width)) then
@@ -101,49 +101,49 @@ function pitBatMod:extractPitEdgeCellsHelper(pitTable, visitedTable, cellX, cell
     end
 
     for xOffset = -1, 1 do
-		for yOffset = -1, 1 do
-			if (xOffset ~= 0) or (yOffset ~= 0) then
-				x, y = clamp(cellX + xOffset, cellY + yOffset)
+        for yOffset = -1, 1 do
+            if (xOffset ~= 0) or (yOffset ~= 0) then
+                x, y = clamp(cellX + xOffset, cellY + yOffset)
 
-				numberOfNonPitNeighbors = numberOfNonPitNeighbors + pitBatMod:extractPitEdgeCellsHelper(
-						pitTable, visitedTable, x, y, width, height, indices)			
-			end
-		end	
-	end
+                numberOfNonPitNeighbors = numberOfNonPitNeighbors + pitBatMod:extractPitEdgeCellsHelper(
+                        pitTable, visitedTable, x, y, width, height, indices)            
+            end
+        end    
+    end
 
-	if numberOfNonPitNeighbors > 0 then
-		table.insert(indices, pitBatMod:cellToIndex(width, cellX - 1, cellY - 1))
-	end
+    if numberOfNonPitNeighbors > 0 then
+        table.insert(indices, pitBatMod:cellToIndex(width, cellX - 1, cellY - 1))
+    end
 
-	return isPit and 0 or 1
+    return isPit and 0 or 1
 end
 
 -- Returns an "array" of grid indices containing pit edge cells.
 function pitBatMod:extractPitEdgeCells(pitTable)
-	width = #pitTable
-	height = #pitTable[1]
+    width = #pitTable
+    height = #pitTable[1]
 
-	indices = {}
-	visitedTable = {}  -- First need to populate this with false, as we have not visited any cells.
+    indices = {}
+    visitedTable = {}  -- First need to populate this with false, as we have not visited any cells.
 
-	for i = 1, width do
-		visitedTable[i] = {}
+    for i = 1, width do
+        visitedTable[i] = {}
 
-		for j = 1, height do
-			visitedTable[i][j] = false
-		end
-	end
-	
-	for col = 1, width do
-		for row = 1, height do
-			if pitTable[col][row] and not visitedTable[col][row] then
-				pitBatMod:extractPitEdgeCellsHelper(pitTable, visitedTable,
-						col, row, width, height, indices)
-			end
-		end
-	end
-	
-	return indices
+        for j = 1, height do
+            visitedTable[i][j] = false
+        end
+    end
+    
+    for col = 1, width do
+        for row = 1, height do
+            if pitTable[col][row] and not visitedTable[col][row] then
+                pitBatMod:extractPitEdgeCellsHelper(pitTable, visitedTable,
+                        col, row, width, height, indices)
+            end
+        end
+    end
+    
+    return indices
 end
 
 function pitBatMod:populatePits()
@@ -151,7 +151,7 @@ function pitBatMod:populatePits()
     local spawnCount = 0
 
     if not room:IsClear() then
-		pitEdgeCells = pitBatMod:extractPitEdgeCells(pitBatMod:generatePitTable())
+        pitEdgeCells = pitBatMod:extractPitEdgeCells(pitBatMod:generatePitTable())
 
         for i = 1, #pitEdgeCells do
             if spawnCount >= MAX_BAT_COUNT_PER_ROOM then
@@ -159,10 +159,10 @@ function pitBatMod:populatePits()
             end
             
             if rng:RandomInt(30) == 1 then --  30 is some magic number.  Dunno.
-				spawnCount = spawnCount + 1
+                spawnCount = spawnCount + 1
 
-				Isaac.Spawn(Entities.PIT_BAT.id, Entities.PIT_BAT.variant, 0,
-						room:GetGridPosition(pitEdgeCells[i]), Vector(0, 0), nil)
+                Isaac.Spawn(Entities.PIT_BAT.id, Entities.PIT_BAT.variant, 0,
+                        room:GetGridPosition(pitEdgeCells[i]), Vector(0, 0), nil)
             end
         end
     end
