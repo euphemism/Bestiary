@@ -49,14 +49,6 @@ end
 
 pitBatMod:AddCallback(ModCallbacks.MC_NPC_UPDATE, pitBatMod.pitBatControl, Entities.PIT_BAT.id)
 
-function pitBatMod:cellToIndex(gridWidth, cellX, cellY)
-    return cellY * gridWidth + cellX
-end
-
-function pitBatMod:getGridEntityAtCell(room, cellX, cellY)
-    return room:GetGridEntity(pitBatMod:cellToIndex(room:GetGridWidth(), cellX, cellY))
-end
-
 function pitBatMod:generatePitTable()
     local room = game:GetLevel():GetCurrentRoom()
     local pitTable = {}
@@ -65,7 +57,7 @@ function pitBatMod:generatePitTable()
         pitTable[col] = {}
 
         for row = 1, room:GetGridHeight() do
-            gridEntity = pitBatMod:getGridEntityAtCell(room, col - 1, row - 1)
+            gridEntity = getGridEntityAtCell(room, col - 1, row - 1)
 
             if gridEntity then
                 pitTable[col][row] = not not gridEntity:ToPit()  -- boolean logic with nil is funny, I think this is an okay way of doing this.
@@ -112,7 +104,7 @@ function pitBatMod:extractPitEdgeCellsHelper(pitTable, visitedTable, cellX, cell
     end
 
     if numberOfNonPitNeighbors > 0 then
-        table.insert(indices, pitBatMod:cellToIndex(width, cellX - 1, cellY - 1))
+        table.insert(indices, cellToGridIndex(width, cellX - 1, cellY - 1))
     end
 
     return isPit and 0 or 1

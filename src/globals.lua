@@ -33,6 +33,18 @@ function array_concat(...)
     return t
 end
 
+function cellToGridIndex(gridWidth, cellX, cellY)
+    return cellY * gridWidth + cellX
+end
+
+function gridIndexToCell(gridWidth, index)
+    return index % gridWidth, index // gridWidth
+end
+
+function getGridEntityAtCell(room, cellX, cellY)
+    return room:GetGridEntity(cellToGridIndex(room:GetGridWidth(), cellX, cellY))
+end
+
 local function getEntity(name, subt)
     if subt == nil then
         subt = 0
