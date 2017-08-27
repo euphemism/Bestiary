@@ -17,6 +17,21 @@ function bestiaryMod:onUpdate()
   end     
 end
 
+-- Helper function, taken from https://stackoverflow.com/questions/1410862/concatenation-of-tables-in-lua
+function array_concat(...) 
+    local t = {}
+    for n = 1,select("#",...) do
+        local arg = select(n,...)
+        if type(arg)=="table" then
+            for _,v in ipairs(arg) do
+                t[#t+1] = v
+            end
+        else
+            t[#t+1] = arg
+        end
+    end
+    return t
+end
 
 local function getEntity(name, subt)
     if subt == nil then
