@@ -45,6 +45,103 @@ function getGridEntityAtCell(room, cellX, cellY)
     return room:GetGridEntity(cellToGridIndex(room:GetGridWidth(), cellX, cellY))
 end
 
+function getDoorIndices(room)
+    indices = {}
+
+    for _, slot in pairs(DoorSlot) do
+        door = room:GetDoor(slot)
+        
+        if door then
+            table.insert(indices, door:GetGridIndex())
+        end
+    end
+    
+    return indices
+end
+
+--  GridEntity:GetType() is broken.
+function getGridEntityType(gridEntity)
+    if gridEntity then
+        return gridEntity.Desc.Type
+    else
+        return GridEntityType.GRID_NULL --  The game doesn't seem to use this, so we will to represent nil.
+    end
+end
+
+--  Takes in a GridEntityType
+--  Walkable entities are ones that are null, or are decorations or spiderwebs 
+function isWalkableTile(entityType)  
+    return entityType == GridEntityType.GRID_NULL or
+            entityType == GridEntityType.GRID_DECORATION or
+            entityType == GridEntityType.GRID_SPIDERWEB
+end
+
+-- Returns a two dimensional array of GridEntity; false for nil entities.
+function getGridEntities(room)
+    width = room:GetGridWidth()
+    height = room:GetGridHeight()
+    
+    entities = {}
+
+    for x = 1, width do
+        entities[x] = {}
+
+        for y = 1, height do
+            entities[x][y] = getGridEntityAtCell(room, x - 1, y - 1) or false
+        end
+    end
+    
+    return entities
+end
+
+-- Takes in a two dimensional array of GridEntity, where false stands in for a non-entity.
+-- Returns a two dimensional array of GridEntityType; GridEntityType.GRID_NULL for non-entity/floor tiles.
+function getGridEntityTypes(gridEntities)
+    width = #gridEntities
+    height = #gridEntities[1]
+
+    types = {}
+
+    for x = 1, width do
+        types[x] = {}
+
+        for y = 1, height do
+            types[x][y] = getGridEntityType(gridEntities[x][y])
+        end
+    end
+    
+    return types
+end
+
+function gridEntityToString(gridEntity)
+    
+    t = {[GridEntityType.GRID_NULL] = "null",
+            [GridEntityType.GRID_DECORATION] = "decoration",
+            [GridEntityType.GRID_ROCK] = "rock",
+            [GridEntityType.GRID_ROCKB] = "rock b",
+            [GridEntityType.GRID_ROCKT] = "rock t",
+            [GridEntityType.GRID_ROCK_BOMB] = "rock bomb",
+            [GridEntityType.GRID_ROCK_ALT] = "rock alt",
+            [GridEntityType.GRID_PIT] = "pit",
+            [GridEntityType.GRID_SPIKES] = "spikes",
+            [GridEntityType.GRID_SPIKES_ONOFF] = "spikes on/off",
+            [GridEntityType.GRID_SPIDERWEB] = "spiderweb",
+            [GridEntityType.GRID_LOCK] = "lock",
+            [GridEntityType.GRID_TNT] = "tnt",
+            [GridEntityType.GRID_FIREPLACE] = "fireplace",
+            [GridEntityType.GRID_POOP] = "poop",
+            [GridEntityType.GRID_WALL] = "wall",
+            [GridEntityType.GRID_DOOR] = "door",
+            [GridEntityType.GRID_TRAPDOOR] = "trapdoor",
+            [GridEntityType.GRID_STAIRS] = "stairs",
+            [GridEntityType.GRID_GRAVITY] = "gravity",
+            [GridEntityType.GRID_PRESSURE_PLATE] = "pressure plate",
+            [GridEntityType.GRID_STATUE] = "statue",
+            [GridEntityType.GRID_SS] = "ss"}
+            
+    return t[gridEntity and gridEntity.Desc.Type or nil] or "unknown"
+end
+
 local function getEntity(name, subt)
     if subt == nil then
         subt = 0
