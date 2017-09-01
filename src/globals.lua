@@ -33,6 +33,22 @@ function array_concat(...)
     return t
 end
 
+--  Clamps coordinates (1-indexed) within specified bounds.
+function clamp(x, y, width, height)
+    local newX = x
+    local newY = y
+
+    if not ((1 <= x) and (x <= width)) then
+        newX = (x < 1) and 1 or width
+    end
+
+    if not ((1 <= y) and (y <= height)) then
+        newY = (y < 1) and 1 or height
+    end
+
+    return newX, newY
+end
+
 function cellToGridIndex(gridWidth, cellX, cellY)
     return cellY * gridWidth + cellX
 end
@@ -46,16 +62,16 @@ function getGridEntityAtCell(room, cellX, cellY)
 end
 
 function getDoorIndices(room)
-    indices = {}
+    local indices = {}
 
     for _, slot in pairs(DoorSlot) do
-        door = room:GetDoor(slot)
+        local door = room:GetDoor(slot)
         
         if door then
             table.insert(indices, door:GetGridIndex())
         end
     end
-    
+
     return indices
 end
 
@@ -69,19 +85,22 @@ function getGridEntityType(gridEntity)
 end
 
 --  Takes in a GridEntityType
---  Walkable entities are ones that are null, or are decorations or spiderwebs 
+--  Checks if the entity is something Isaac can walk across.
+--  Spikes aren't included. 
 function isWalkableTile(entityType)  
     return entityType == GridEntityType.GRID_NULL or
             entityType == GridEntityType.GRID_DECORATION or
-            entityType == GridEntityType.GRID_SPIDERWEB
+            entityType == GridEntityType.GRID_POOP or
+            entityType == GridEntityType.GRID_SPIDERWEB or
+            entityType == GridEntityType.GRID_PRESSURE_PLATE
 end
 
 -- Returns a two dimensional array of GridEntity; false for nil entities.
 function getGridEntities(room)
-    width = room:GetGridWidth()
-    height = room:GetGridHeight()
+    local width = room:GetGridWidth()
+    local height = room:GetGridHeight()
     
-    entities = {}
+    local entities = {}
 
     for x = 1, width do
         entities[x] = {}
@@ -97,10 +116,10 @@ end
 -- Takes in a two dimensional array of GridEntity, where false stands in for a non-entity.
 -- Returns a two dimensional array of GridEntityType; GridEntityType.GRID_NULL for non-entity/floor tiles.
 function getGridEntityTypes(gridEntities)
-    width = #gridEntities
-    height = #gridEntities[1]
+    local width = #gridEntities
+    local height = #gridEntities[1]
 
-    types = {}
+    local types = {}
 
     for x = 1, width do
         types[x] = {}
@@ -113,9 +132,96 @@ function getGridEntityTypes(gridEntities)
     return types
 end
 
+--[[
+--  Takes in a two dimensional array, 
+--  start coordinates (1-indexed), offsets for the cells to be searched around the current cell,
+--  a matching function for the elements of the grid,
+--  and a set of optional arguments to pass along to the matching function.
+--  The matching function will receive an element of the grid, and its xy-coordinates.
+--  The matching function must return true or false.
+--  Returns array of contiguous indices matched by the matching function and found from starting position.
+]]--
+function gridFloodFill(grid, startX, startY, offsets, matchingFunction, ...)   
+    local width = #grid
+    local height = #grid[1]
+    local indices = {}
+    local visited = {}
+    
+    for x = 1, width do
+        visited[x] = {}
+
+        for y = 1, height do
+            visited[x][y] = false
+        end
+    end
+    
+    local stack = {{startX, startY}}
+
+    while #stack > 0 do
+        local x, y = table.unpack(stack[#stack])
+        table.remove(stack, #stack)
+        
+        visited[x][y] = true
+
+        if matchingFunction(grid[x][y], x, y, arg and table.unpack(arg)) then
+            table.insert(indices, cellToGridIndex(width, x, y))
+
+            for _, offset in pairs(offsets) do
+                local xOffset, yOffset = table.unpack(offset)
+                local curX, curY = clamp(x + xOffset, y + yOffset, width, height)
+
+                if not visited[curX][curY] then
+                    table.insert(stack, {curX, curY})
+                end
+            end
+        end
+    end
+
+    return indices
+end
+
+-- Returns an array of grid indices of cells that are directly reachable from the doors.
+function getWalkableTiles(room)
+    local doors = getDoorIndices(room)
+    local width = room:GetGridWidth()
+    local height = room:GetGridHeight()
+
+    local tileX, tileY = nil, nil
+    local offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}} -- Four-way flood fill.
+
+    for _, door in pairs(doors) do --  This bit finds a walkable tile in front of a door.
+        local doorX, doorY = gridIndexToCell(width, door)
+
+        for __, offset in pairs(offsets) do
+            local xOffset, yOffset = table.unpack(offset)
+            local x, y = clamp(doorX + xOffset, doorY + yOffset, width, height)
+
+            if isWalkableTile(getGridEntityType(getGridEntityAtCell(room, x, y))) then
+                tileX, tileY = x, y
+
+                break
+            end
+        end
+
+        if tileX then
+            break
+        end
+    end
+
+    if tileX then
+        local grid = getGridEntityTypes(getGridEntities(room))
+
+        --  tileX, tileY are in game coordinates, need to add 1 because Lua is 1-indexed.
+        return gridFloodFill(grid, tileX + 1, tileY + 1, offsets, isWalkableTile)
+    else
+        --  Some sort of error handling is needed, but I don't think this should ever be hit.
+        Isaac.DebugString("ERROR: getWalkableTiles() No walkable tile found in front of any doors.")
+    end
+end
+
 function gridEntityToString(gridEntity)
     
-    t = {[GridEntityType.GRID_NULL] = "null",
+    local t = {[GridEntityType.GRID_NULL] = "null",
             [GridEntityType.GRID_DECORATION] = "decoration",
             [GridEntityType.GRID_ROCK] = "rock",
             [GridEntityType.GRID_ROCKB] = "rock b",
