@@ -705,24 +705,25 @@ end
 
 function pitBatMod:populatePits()
     local room = game:GetLevel():GetCurrentRoom()
-    local spawnCount = 0
-    local tiles = getWalkableTiles(room)
-    local walkable = {}
-    
-    for x = 1, room:GetGridWidth() do
-        walkable[x] = {}
-
-        for y = 1, room:GetGridHeight() do
-            walkable[x][y] = false
-        end
-    end
-    
-    for _, tile in pairs(tiles) do
-        x, y = gridIndexToCell(room:GetGridWidth(), tile)
-        walkable[x][y] = true
-    end
 
     if not room:IsClear() then
+        local spawnCount = 0
+        local tiles = getWalkableTiles(room)
+        local walkable = {}
+        
+        for x = 1, room:GetGridWidth() do
+            walkable[x] = {}
+
+            for y = 1, room:GetGridHeight() do
+                walkable[x][y] = false
+            end
+        end
+        
+        for _, tile in pairs(tiles) do
+            x, y = gridIndexToCell(room:GetGridWidth(), tile)
+            walkable[x][y] = true
+        end
+
         pitEdgeCells = pitBatMod:getPitEdgeCells(room, walkable)
 
         for i = 1, #pitEdgeCells do
